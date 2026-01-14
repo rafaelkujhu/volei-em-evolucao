@@ -6,75 +6,133 @@
 <title>Vôlei em Evolução</title>
 
 <style>
+:root{
+  --primary:#3f51b5;
+  --bg:#f2f4f8;
+  --card:#ffffff;
+  --soft:#f7f9ff;
+  --radius:16px;
+}
+
 body{
   margin:0;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-  background:#f2f4f8;
+  background:var(--bg);
 }
+
 .app{
   max-width:420px;
   margin:auto;
-  background:#fff;
   min-height:100vh;
-  padding:20px;
+  padding:18px;
 }
-h1{text-align:center;color:#3f51b5;}
-h2{color:#3f51b5;margin-top:20px;}
+
+h1,h2{
+  color:var(--primary);
+}
+
 input,select{
   width:100%;
   padding:12px;
-  margin-top:10px;
+  border-radius:12px;
+  border:1px solid #ddd;
+  margin-top:8px;
 }
+
 button{
   width:100%;
-  padding:15px;
-  margin-top:15px;
-  background:#3f51b5;
+  padding:14px;
+  margin-top:14px;
+  background:var(--primary);
   color:#fff;
   border:none;
-  border-radius:10px;
-  font-size:16px;
+  border-radius:14px;
+  font-size:15px;
 }
-.fundamento{margin-top:15px;}
-.duplo input{width:48%;display:inline-block;}
-.resultado{
-  margin-top:20px;
-  padding:15px;
-  border-radius:10px;
-  background:#eef1ff;
-}
-.vermelho{color:#d32f2f;}
-.amarelo{color:#f9a825;}
-.verde{color:#388e3c;}
-canvas{margin-top:20px;}
-.oculto{display:none;}
+
 .perfil{
-  background:#f7f9ff;
-  padding:12px;
+  background:linear-gradient(135deg,#3f51b5,#5c6bc0);
+  color:#fff;
+  padding:14px;
+  border-radius:var(--radius);
+  font-size:14px;
+  margin-bottom:16px;
+}
+
+.fundamentos{
+  display:grid;
+  gap:14px;
+}
+
+.card{
+  background:var(--card);
+  padding:14px;
+  border-radius:var(--radius);
+  box-shadow:0 6px 16px rgba(0,0,0,.05);
+}
+
+.grid-inputs{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.progress{
+  height:10px;
+  background:#e0e4f5;
   border-radius:10px;
-  margin-bottom:10px;
+  overflow:hidden;
+  margin-top:6px;
+}
+
+.progress-bar{
+  height:100%;
+  width:0%;
+  transition:width 1s ease;
+}
+
+.pb-red{background:#d32f2f;}
+.pb-yellow{background:#f9a825;}
+.pb-green{background:#388e3c;}
+
+.meta{
+  font-size:12px;
+  margin-top:6px;
+  display:flex;
+  justify-content:space-between;
+}
+
+.resultado{
+  background:var(--soft);
+  padding:14px;
+  border-radius:var(--radius);
+  margin-top:14px;
   font-size:14px;
 }
+
+.medalhas{
+  font-size:22px;
+  margin-top:6px;
+}
+
+canvas{
+  margin-top:14px;
+  background:#fff;
+  border-radius:var(--radius);
+}
+
+.oculto{display:none;}
 </style>
 </head>
 
 <body>
 <div class="app">
 
-<!-- PERFIL / LOGIN ATLETA -->
+<!-- LOGIN -->
 <div id="login">
   <h1>🏐 Vôlei em Evolução</h1>
-
   <input id="nome" placeholder="Nome do atleta">
   <input id="idade" type="number" placeholder="Idade">
-
-  <select id="genero">
-    <option value="">Gênero</option>
-    <option>Feminino</option>
-    <option>Masculino</option>
-    <option>Outro</option>
-  </select>
-
   <select id="posicao">
     <option value="">Posição</option>
     <option>Levantador(a)</option>
@@ -83,163 +141,135 @@ canvas{margin-top:20px;}
     <option>Oposto(a)</option>
     <option>Líbero</option>
   </select>
-
   <button onclick="login()">Entrar</button>
 </div>
 
 <!-- APP -->
 <div id="app" class="oculto">
 
-<h1>🏐 Vôlei em Evolução</h1>
-
 <div class="perfil">
-<strong>Atleta:</strong> <span id="pNome"></span><br>
-<strong>Idade:</strong> <span id="pIdade"></span> anos<br>
-<strong>Gênero:</strong> <span id="pGenero"></span><br>
+<strong>Atleta:</strong> <span id="pNome"></span> ·
+<strong>Idade:</strong> <span id="pIdade"></span> ·
 <strong>Posição:</strong> <span id="pPosicao"></span>
 </div>
 
-<!-- FUNDAMENTOS -->
 <h2>Fundamentos</h2>
 
-<div class="fundamento duplo"><strong>Saque</strong>
-<input id="saqueA" type="number" placeholder="Acertos">
-<input id="saqueE" type="number" placeholder="Erros"></div>
+<div class="fundamentos" id="fundamentos"></div>
 
-<div class="fundamento duplo"><strong>Passe</strong>
-<input id="passeA" type="number" placeholder="Acertos">
-<input id="passeE" type="number" placeholder="Erros"></div>
-
-<div class="fundamento duplo"><strong>Ataque</strong>
-<input id="ataqueA" type="number" placeholder="Acertos">
-<input id="ataqueE" type="number" placeholder="Erros"></div>
-
-<div class="fundamento duplo"><strong>Defesa</strong>
-<input id="defesaA" type="number" placeholder="Acertos">
-<input id="defesaE" type="number" placeholder="Erros"></div>
-
-<button onclick="analisar()">Analisar Desempenho</button>
-
-<!-- COORDENAÇÃO -->
-<h2>Coordenação & Consciência Corporal</h2>
-
-<select id="coord">
-  <option value="0">Coordenação</option>
-  <option value="40">Baixa</option>
-  <option value="65">Média</option>
-  <option value="85">Boa</option>
-</select>
-
-<select id="cons">
-  <option value="0">Consciência corporal</option>
-  <option value="40">Baixa</option>
-  <option value="65">Média</option>
-  <option value="85">Boa</option>
-</select>
-
-<button onclick="avaliarCorporal()">Avaliar Corpo</button>
+<button onclick="analisar()">Analisar Sessão</button>
 
 <div id="saida"></div>
 
 <h2>Dashboard</h2>
 <canvas id="grafico" width="360" height="200"></canvas>
 
+<button onclick="gerarPDF()">📄 Gerar Relatório em PDF</button>
 <button onclick="logout()">Trocar Atleta</button>
 
 </div>
 </div>
 
 <script>
+const META = 70;
 let atletaAtual=null;
+const fundamentosLista=["Saque","Passe","Ataque","Defesa"];
 
-// LOGIN ATLETA
 function login(){
-  if(!nome.value||!idade.value||!genero.value||!posicao.value)
-    return alert("Preencha todo o perfil");
-
-  atletaAtual = nome.value;
-  localStorage.setItem(atletaAtual+"_perfil", JSON.stringify({
-    nome:nome.value,
-    idade:idade.value,
-    genero:genero.value,
-    posicao:posicao.value
+  if(!nome.value||!idade.value||!posicao.value) return alert("Preencha o perfil");
+  atletaAtual=nome.value;
+  localStorage.setItem(atletaAtual+"_perfil",JSON.stringify({
+    nome:nome.value,idade:idade.value,posicao:posicao.value
   }));
-
   carregarPerfil();
-  mostrarApp(true);
+  montarFundamentos();
+  toggle(true);
 }
 
-function logout(){
-  atletaAtual=null;
-  mostrarApp(false);
-}
-
-function mostrarApp(on){
-  document.getElementById("login").classList.toggle("oculto",on);
-  document.getElementById("app").classList.toggle("oculto",!on);
+function logout(){toggle(false);}
+function toggle(on){
+  login.classList.toggle("oculto",on);
+  app.classList.toggle("oculto",!on);
 }
 
 function carregarPerfil(){
-  let p = JSON.parse(localStorage.getItem(atletaAtual+"_perfil"));
+  let p=JSON.parse(localStorage.getItem(atletaAtual+"_perfil"));
   pNome.innerText=p.nome;
   pIdade.innerText=p.idade;
-  pGenero.innerText=p.genero;
   pPosicao.innerText=p.posicao;
 }
 
-// HISTÓRICO
-function salvar(d){
-  let h=JSON.parse(localStorage.getItem(atletaAtual))||[];
-  h.push(d);
-  localStorage.setItem(atletaAtual,JSON.stringify(h));
+function montarFundamentos(){
+  fundamentos.innerHTML="";
+  fundamentosLista.forEach(f=>{
+    fundamentos.innerHTML+=`
+    <div class="card">
+      <h3>${f}</h3>
+      <div class="grid-inputs">
+        <input id="${f}A" type="number" placeholder="Acertos">
+        <input id="${f}E" type="number" placeholder="Erros">
+      </div>
+      <div class="progress">
+        <div id="bar${f}" class="progress-bar"></div>
+      </div>
+      <div class="meta">
+        <span>Meta: ${META}%</span>
+        <span id="txt${f}">0%</span>
+      </div>
+    </div>`;
+  });
 }
 
-// ANÁLISE FUNDAMENTOS
 function analisar(){
-  let dados=[
-    calc("Saque",saqueA,saqueE),
-    calc("Passe",passeA,passeE),
-    calc("Ataque",ataqueA,ataqueE),
-    calc("Defesa",defesaA,defesaE)
-  ];
+  let historico = JSON.parse(localStorage.getItem(atletaAtual)) || [];
+  let atual=[];
 
-  let pior=dados.reduce((a,b)=>a.pct<b.pct?a:b);
-  let melhor=dados.reduce((a,b)=>a.pct>b.pct?a:b);
-  let media=Math.round(dados.reduce((s,f)=>s+f.pct,0)/4);
+  fundamentosLista.forEach(f=>{
+    let A=+document.getElementById(f+"A").value||0;
+    let E=+document.getElementById(f+"E").value||0;
+    let pct=A+E?Math.round(A/(A+E)*100):0;
+    atual.push({nome:f,pct});
+    atualizarBarra(f,pct);
+  });
 
-  let nivel=media<50?"Iniciante":media<75?"Intermediário":"Avançado";
+  let anterior = historico.at(-1);
+  historico.push(atual);
+  localStorage.setItem(atletaAtual,JSON.stringify(historico));
 
-  salvar({tipo:"fundamentos",dados,media,nivel,data:new Date()});
-  grafico(dados);
+  mostrarResultado(atual,anterior);
+  grafico(atual);
+}
+
+function atualizarBarra(f,pct){
+  let b=document.getElementById("bar"+f);
+  let t=document.getElementById("txt"+f);
+  t.innerText=pct+"%";
+  b.style.width=pct+"%";
+  b.className="progress-bar "+(pct<META?"pb-red":pct<85?"pb-yellow":"pb-green");
+}
+
+function mostrarResultado(atual,anterior){
+  let medalhas="";
+  let comp="";
+
+  atual.forEach((f,i)=>{
+    if(f.pct>=META) medalhas+="🏅 ";
+    if(anterior){
+      let dif=f.pct-anterior[i].pct;
+      comp+=`${f.nome}: ${dif>=0?"↑":"↓"} ${Math.abs(dif)}%<br>`;
+    }
+  });
 
   saida.innerHTML=`
   <div class="resultado">
-  🎯 <strong>Prioridade:</strong> <span class="vermelho">${pior.nome}</span><br>
-  💪 <strong>Ponto forte:</strong> <span class="verde">${melhor.nome}</span><br>
-  📊 <strong>Média:</strong> ${media}%<br>
-  🏷️ <strong>Nível:</strong> ${nivel}
+    🏆 <strong>Medalhas:</strong>
+    <div class="medalhas">${medalhas||"Nenhuma ainda"}</div>
+    <br>
+    📊 <strong>Comparação com sessão anterior:</strong><br>
+    ${comp||"Primeira sessão registrada"}
   </div>`;
 }
 
-// CÁLCULO
-function calc(n,a,e){
-  let A=+a.value||0,E=+e.value||0;
-  let t=A+E;
-  return {nome:n,pct:t?Math.round(A/t*100):0};
-}
-
-// AVALIAÇÃO CORPORAL
-function avaliarCorporal(){
-  let m=Math.round((+coord.value + +cons.value)/2);
-  let txt=m<60?"Trabalhar base motora":
-          m<80?"Boa evolução corporal":
-          "Excelente controle corporal";
-
-  salvar({tipo:"corporal",media:m,data:new Date()});
-  saida.innerHTML+=`<div class="resultado">🧠 ${txt} (${m}%)</div>`;
-}
-
-// GRÁFICO
 function grafico(d){
   let c=grafico.getContext("2d");
   c.clearRect(0,0,360,200);
@@ -250,6 +280,11 @@ function grafico(d){
     c.fillText(f.nome,30+i*80,195);
     c.fillText(f.pct+"%",35+i*80,165-h);
   });
+}
+
+/* PDF */
+function gerarPDF(){
+  window.print();
 }
 </script>
 </body>
