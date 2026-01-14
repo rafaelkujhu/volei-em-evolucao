@@ -12,24 +12,19 @@
   --card:#ffffff;
   --radius:14px;
 }
-
 *{box-sizing:border-box;}
-
 body{
   margin:0;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
   background:var(--bg);
 }
-
 .app{
   max-width:420px;
   margin:auto;
   min-height:100vh;
   padding:16px;
 }
-
 h1,h2{color:var(--primary);}
-
 input,select{
   width:100%;
   padding:10px;
@@ -39,7 +34,6 @@ input,select{
   font-size:14px;
   margin-top:6px;
 }
-
 button{
   width:100%;
   padding:14px;
@@ -50,7 +44,6 @@ button{
   border-radius:12px;
   font-size:15px;
 }
-
 .perfil{
   background:linear-gradient(135deg,#3f51b5,#5c6bc0);
   color:#fff;
@@ -59,7 +52,6 @@ button{
   font-size:13px;
   line-height:1.5;
 }
-
 .card{
   background:#fff;
   padding:12px;
@@ -67,13 +59,11 @@ button{
   box-shadow:0 4px 10px rgba(0,0,0,.05);
   margin-top:12px;
 }
-
 .grid{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:8px;
 }
-
 .progress{
   height:8px;
   background:#e0e4f5;
@@ -81,25 +71,13 @@ button{
   overflow:hidden;
   margin-top:6px;
 }
-
 .progress-bar{height:100%;width:0%;}
 .pb-red{background:#d32f2f;}
 .pb-yellow{background:#f9a825;}
 .pb-green{background:#388e3c;}
-
-.meta{
-  font-size:12px;
-  margin-top:4px;
-}
-
-canvas{
-  margin-top:12px;
-  background:#fff;
-  border-radius:14px;
-}
-
+.meta{font-size:12px;margin-top:4px;}
+canvas{margin-top:12px;background:#fff;border-radius:14px;}
 .oculto{display:none;}
-
 @media print{
   button,#login,#treinador{display:none;}
 }
@@ -112,13 +90,11 @@ canvas{
 <!-- LOGIN -->
 <div id="login">
   <h1>🏐 Vôlei em Evolução</h1>
-
   <input id="nome" placeholder="Nome do atleta">
   <input id="idade" type="number" placeholder="Idade">
   <input id="altura" type="number" step="0.01" placeholder="Altura (m)">
   <input id="peso" type="number" step="0.1" placeholder="Peso (kg)">
   <input id="quadril" type="number" step="0.1" placeholder="Quadril (cm)">
-
   <select id="posicao">
     <option value="">Posição</option>
     <option>Levantador(a)</option>
@@ -127,27 +103,24 @@ canvas{
     <option>Oposto(a)</option>
     <option>Líbero</option>
   </select>
-
   <button onclick="entrar()">Entrar como atleta</button>
   <button onclick="abrirTreinador()">Entrar como treinador</button>
 </div>
 
 <!-- APP ATLETA -->
 <div id="app" class="oculto">
+  <div class="perfil" id="perfil"></div>
 
-<div class="perfil" id="perfil"></div>
+  <h2>Fundamentos</h2>
+  <div id="fundamentos"></div>
 
-<h2>Fundamentos</h2>
-<div id="fundamentos"></div>
+  <button onclick="analisar()">Analisar sessão</button>
+  <div id="saida"></div>
 
-<button onclick="analisar()">Analisar sessão</button>
+  <canvas id="grafico" width="360" height="180"></canvas>
 
-<div id="saida"></div>
-
-<canvas id="grafico" width="360" height="180"></canvas>
-
-<button onclick="gerarPDF()">📄 PDF pedagógico</button>
-<button onclick="sair()">Sair</button>
+  <button onclick="gerarPDF()">📄 PDF pedagógico</button>
+  <button onclick="sair()">Sair</button>
 </div>
 
 <!-- TREINADOR -->
@@ -162,51 +135,26 @@ canvas{
 
 <script>
 let atletaAtual=null;
-const fundamentos=["Saque","Passe","Ataque","Defesa"];
+const fundamentosLista=["Saque","Passe","Ataque","Defesa"];
+const fundamentosEl=document.getElementById("fundamentos");
 
 /* ===== METAS POR IDADE ===== */
-function faixaEtaria(idade){
-  if(idade<=12) return "infantil";
-  if(idade<=15) return "juvenil";
-  return "adulto";
-}
-
+function faixaEtaria(i){return i<=12?"infantil":i<=15?"juvenil":"adulto";}
 const metas={
   infantil:{Saque:50,Passe:60,Ataque:50,Defesa:60},
   juvenil:{Saque:60,Passe:70,Ataque:65,Defesa:70},
   adulto:{Saque:70,Passe:80,Ataque:75,Defesa:75}
 };
-
 const treinos={
-  infantil:{
-    Saque:["Alvo grande","Controle","Rotina simples"],
-    Passe:["Passe parado","Coordenação","Precisão"],
-    Ataque:["Sem salto","Tempo de bola","Coordenação"],
-    Defesa:["Posicionamento","Reação","Base"]
-  },
-  juvenil:{
-    Saque:["Saque direcionado","Regularidade","Ritmo"],
-    Passe:["Passe em movimento","Leitura","Precisão"],
-    Ataque:["Tempo de ataque","Coordenação","Eficiência"],
-    Defesa:["Reação","Posicionamento","Transição"]
-  },
-  adulto:{
-    Saque:["Saque tático","Alvo específico","Pressão"],
-    Passe:["Passe sob pressão","Decisão","Qualidade"],
-    Ataque:["Variação","Eficiência","Decisão"],
-    Defesa:["Leitura","Reação","Continuidade"]
-  }
+  infantil:{Saque:["Alvo grande","Controle"],Passe:["Passe parado"],Ataque:["Sem salto"],Defesa:["Base"]},
+  juvenil:{Saque:["Direcionado"],Passe:["Movimento"],Ataque:["Tempo"],Defesa:["Transição"]},
+  adulto:{Saque:["Tático"],Passe:["Pressão"],Ataque:["Variação"],Defesa:["Leitura"]}
 };
 
 /* ===== LOGIN ===== */
 function entrar(){
-  if(!nome.value.trim()){
-    alert("Informe o nome");
-    return;
-  }
-
+  if(!nome.value.trim()) return alert("Informe o nome");
   atletaAtual=nome.value.trim();
-
   let atleta={
     perfil:{
       nome:atletaAtual,
@@ -218,44 +166,37 @@ function entrar(){
     },
     sessoes:[]
   };
-
   localStorage.setItem(atletaAtual,JSON.stringify(atleta));
   login.classList.add("oculto");
   app.classList.remove("oculto");
-
   carregarPerfil();
   montarFundamentos();
 }
 
-/* ===== PERFIL + IMC / IAC ===== */
+/* ===== PERFIL ===== */
 function carregarPerfil(){
   let a=JSON.parse(localStorage.getItem(atletaAtual));
   let imc=(a.perfil.peso/(a.perfil.altura**2)).toFixed(1);
   let iac=((a.perfil.quadril/(a.perfil.altura*Math.sqrt(a.perfil.altura)))-18).toFixed(1);
-
-  perfil.innerHTML=`
-    <strong>${a.perfil.nome}</strong><br>
-    ${a.perfil.posicao} · ${a.perfil.idade} anos<br>
-    IMC: ${imc} · IAC: ${iac}
-  `;
+  perfil.innerHTML=`<strong>${a.perfil.nome}</strong><br>
+  ${a.perfil.posicao} · ${a.perfil.idade} anos<br>
+  IMC: ${imc} · IAC: ${iac}`;
 }
 
 /* ===== FUNDAMENTOS ===== */
 function montarFundamentos(){
   let html="";
-  fundamentos.forEach(f=>{
+  fundamentosLista.forEach(f=>{
     html+=`
-      <div class="card">
-        <strong>${f}</strong>
-        <div class="grid">
-          <input id="${f}A" type="number" placeholder="Acertos">
-          <input id="${f}E" type="number" placeholder="Erros">
-        </div>
-        <div class="progress">
-          <div id="bar${f}" class="progress-bar"></div>
-        </div>
-        <div id="meta${f}" class="meta"></div>
-      </div>`;
+    <div class="card">
+      <strong>${f}</strong>
+      <div class="grid">
+        <input id="${f}A" type="number" placeholder="Acertos">
+        <input id="${f}E" type="number" placeholder="Erros">
+      </div>
+      <div class="progress"><div id="bar${f}" class="progress-bar"></div></div>
+      <div id="meta${f}" class="meta"></div>
+    </div>`;
   });
   fundamentosEl.innerHTML=html;
 }
@@ -266,7 +207,7 @@ function analisar(){
   let faixa=faixaEtaria(atleta.perfil.idade);
   let dados={};
 
-  fundamentos.forEach(f=>{
+  fundamentosLista.forEach(f=>{
     let A=+document.getElementById(f+"A").value||0;
     let E=+document.getElementById(f+"E").value||0;
     let pct=A+E?Math.round(A/(A+E)*100):0;
@@ -279,69 +220,3 @@ function analisar(){
     let bar=document.getElementById("bar"+f);
     bar.style.width=pct+"%";
     bar.className="progress-bar "+(pct<meta?"pb-red":pct<=meta+5?"pb-yellow":"pb-green");
-  });
-
-  atleta.sessoes.push({fundamentos:dados});
-  localStorage.setItem(atletaAtual,JSON.stringify(atleta));
-
-  let pior=Object.entries(dados).sort((a,b)=>a[1]-b[1])[0][0];
-  saida.innerHTML=`
-    <div class="card">
-      <strong>Treino sugerido (${pior})</strong><br>
-      ${treinos[faixa][pior].map(t=>"• "+t).join("<br>")}
-    </div>`;
-
-  desenharGrafico(dados);
-}
-
-/* ===== DASHBOARD ===== */
-function desenharGrafico(d){
-  let ctx=grafico.getContext("2d");
-  ctx.clearRect(0,0,360,180);
-  fundamentos.forEach((f,i)=>{
-    let h=d[f]*1.4;
-    ctx.fillStyle="#3f51b5";
-    ctx.fillRect(30+i*70,160-h,40,h);
-    ctx.fillText(f,30+i*70,175);
-  });
-}
-
-/* ===== TREINADOR ===== */
-function abrirTreinador(){
-  login.classList.add("oculto");
-  treinador.classList.remove("oculto");
-
-  let html="";
-  for(let k in localStorage){
-    try{
-      let a=JSON.parse(localStorage.getItem(k));
-      if(a?.perfil){
-        html+=`<div class="card" onclick="mostrarGrafico('${k}')">${a.perfil.nome}</div>`;
-      }
-    }catch{}
-  }
-  listaAtletas.innerHTML=html||"<div class='card'>Nenhum atleta</div>";
-}
-
-function mostrarGrafico(nome){
-  let a=JSON.parse(localStorage.getItem(nome));
-  if(!a||!a.sessoes.length) return;
-
-  let ctx=graficoAtleta.getContext("2d");
-  ctx.clearRect(0,0,360,180);
-
-  a.sessoes.forEach((s,i)=>{
-    let media=Object.values(s.fundamentos).reduce((x,y)=>x+y,0)/fundamentos.length;
-    let h=media*1.4;
-    ctx.fillStyle="#7986cb";
-    ctx.fillRect(30+i*40,160-h,30,h);
-  });
-}
-
-/* ===== OUTROS ===== */
-function gerarPDF(){window.print();}
-function sair(){app.classList.add("oculto");login.classList.remove("oculto");}
-function voltarLogin(){treinador.classList.add("oculto");login.classList.remove("oculto");}
-</script>
-</body>
-</html>
