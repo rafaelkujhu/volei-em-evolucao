@@ -10,7 +10,6 @@
   --primary:#3f51b5;
   --bg:#f2f4f8;
   --card:#ffffff;
-  --soft:#f7f9ff;
   --radius:14px;
 }
 
@@ -27,7 +26,7 @@ body{
   padding:16px;
 }
 
-h1,h2,h3{color:var(--primary);}
+h1,h2{color:var(--primary);}
 
 input,select{
   width:100%;
@@ -62,6 +61,7 @@ button{
   background:#e0e4f5;
   border-radius:8px;
   overflow:hidden;
+  margin-top:6px;
 }
 
 .progress-bar{height:100%;width:0%;}
@@ -86,10 +86,8 @@ canvas{margin-top:12px;background:#fff;border-radius:14px;}
   <h1>🏐 Vôlei em Evolução</h1>
   <input id="nome" placeholder="Nome">
   <input id="idade" type="number" placeholder="Idade">
-  <input id="altura" type="number" step="0.01" placeholder="Altura (m)">
-  <input id="peso" type="number" step="0.1" placeholder="Peso (kg)">
-  <input id="quadril" type="number" step="0.1" placeholder="Quadril (cm)">
   <select id="posicao">
+    <option value="">Posição</option>
     <option>Levantador(a)</option>
     <option>Ponteiro(a)</option>
     <option>Central</option>
@@ -104,14 +102,10 @@ canvas{margin-top:12px;background:#fff;border-radius:14px;}
 <div id="app" class="oculto">
   <h2 id="perfil"></h2>
 
-  <div class="card">
-    <strong>Saque</strong>
-    <input id="SaqueA" placeholder="Acertos">
-    <input id="SaqueE" placeholder="Erros">
-    <div class="progress"><div id="barSaque" class="progress-bar"></div></div>
-  </div>
+  <!-- FUNDAMENTOS -->
+  <div id="fundamentos"></div>
 
-  <button onclick="analisar()">Analisar</button>
+  <button onclick="analisar()">Analisar sessão</button>
 
   <div id="saida"></div>
 
@@ -134,56 +128,128 @@ canvas{margin-top:12px;background:#fff;border-radius:14px;}
 <script>
 let atletaAtual=null;
 
+/* ===== CONFIGURAÇÃO DE FUNDAMENTOS ===== */
+const fundamentos = ["Saque","Passe","Ataque","Defesa"];
+
+/* ===== LOGIN ===== */
 function entrar(){
-  atletaAtual=nome.value;
-  let atleta={
-    perfil:{nome:nome.value,idade:idade.value,posicao:posicao.value,altura:+altura.value,peso:+peso.value,quadril:+quadril.value},
+  if(!nome.value.trim()){
+    alert("Informe o nome");
+    return;
+  }
+  atletaAtual = nome.value.trim();
+
+  let atleta = {
+    perfil:{
+      nome:atletaAtual,
+      idade:Number(idade.value)||0,
+      posicao:posicao.value||""
+    },
     sessoes:[]
   };
-  localStorage.setItem(atletaAtual,JSON.stringify(atleta));
+
+  localStorage.setItem(atletaAtual, JSON.stringify(atleta));
   login.classList.add("oculto");
   app.classList.remove("oculto");
-  perfil.innerText=`${atleta.perfil.nome} (${atleta.perfil.posicao})`;
+  perfil.innerText = `${atleta.perfil.nome} (${atleta.perfil.posicao})`;
+
+  montarFundamentos();
 }
 
-function analisar(){
-  let atleta=JSON.parse(localStorage.getItem(atletaAtual));
-  let A=+SaqueA.value||0,E=+SaqueE.value||0;
-  let pct=A+E?Math.round(A/(A+E)*100):0;
-  barSaque.style.width=pct+"%";
-  barSaque.className="progress-bar "+(pct<60?"pb-red":pct<80?"pb-yellow":"pb-green");
-  atleta.sessoes.push({fundamentos:{Saque:pct}});
-  localStorage.setItem(atletaAtual,JSON.stringify(atleta));
-  saida.innerHTML=`Resultado do saque: ${pct}%`;
-}
-
-function gerarPDF(){window.print();}
-function sair(){app.classList.add("oculto");login.classList.remove("oculto");}
-
-function abrirTreinador(){
-  login.classList.add("oculto");
-  treinador.classList.remove("oculto");
+/* ===== MONTA UI DOS FUNDAMENTOS ===== */
+function montarFundamentos(){
   let html="";
-  for(let k in localStorage){
-    let a=JSON.parse(localStorage.getItem(k));
-    if(a?.perfil){
-      html+=`<div class="card" onclick="mostrarGrafico('${k}')">${a.perfil.nome}</div>`;
-    }
-  }
-  listaAtletas.innerHTML=html;
+  fundamentos.forEach(f=>{
+    html+=`
+      <div class="card">
+        <strong>${f}</strong>
+        <input id="${f}A" type="number" placeholder="Acertos">
+        <input id="${f}E" type="number" placeholder="Erros">
+        <div class="progress">
+          <div id="bar${f}" class="progress-bar"></div>
+        </div>
+      </div>`;
+  });
+  document.getElementById("fundamentos").innerHTML = html;
 }
 
-function mostrarGrafico(nome){
-  let a=JSON.parse(localStorage.getItem(nome));
-  let ctx=graficoAtleta.getContext("2d");
+/* ===== ANÁLISE ===== */
+function analisar(){
+  let atleta = JSON.parse(localStorage.getItem(atletaAtual));
+  if(!atleta) return;
+
+  let dados = {};
+  fundamentos.forEach(f=>{
+    let A = Number(document.getElementById(f+"A").value)||0;
+    let E = Number(document.getElementById(f+"E").value)||0;
+    let pct = (A+E)?Math.round(A/(A+E)*100):0;
+    dados[f]=pct;
+
+    let bar = document.getElementById("bar"+f);
+    bar.style.width = pct+"%";
+    bar.className =
+      "progress-bar "+(pct<60?"pb-red":pct<80?"pb-yellow":"pb-green");
+  });
+
+  atleta.sessoes.push({fundamentos:dados});
+  localStorage.setItem(atletaAtual, JSON.stringify(atleta));
+
+  saida.innerHTML = "Sessão registrada com sucesso";
+  desenharGrafico(dados);
+}
+
+/* ===== DASHBOARD ===== */
+function desenharGrafico(dados){
+  let ctx = grafico.getContext("2d");
   ctx.clearRect(0,0,360,180);
-  a.sessoes.forEach((s,i)=>{
-    let h=s.fundamentos.Saque*1.4;
+  fundamentos.forEach((f,i)=>{
+    let h = dados[f]*1.4;
     ctx.fillStyle="#3f51b5";
-    ctx.fillRect(20+i*40,160-h,30,h);
+    ctx.fillRect(30+i*70,160-h,40,h);
+    ctx.fillText(f,30+i*70,175);
   });
 }
 
+/* ===== PDF ===== */
+function gerarPDF(){ window.print(); }
+
+/* ===== TREINADOR ===== */
+function abrirTreinador(){
+  login.classList.add("oculto");
+  treinador.classList.remove("oculto");
+
+  let html="";
+  for(let k in localStorage){
+    try{
+      let a=JSON.parse(localStorage.getItem(k));
+      if(a?.perfil){
+        html+=`<div class="card" onclick="mostrarGrafico('${k}')">${a.perfil.nome}</div>`;
+      }
+    }catch{}
+  }
+  listaAtletas.innerHTML = html || "<div class='card'>Nenhum atleta</div>";
+}
+
+function mostrarGrafico(nome){
+  let a = JSON.parse(localStorage.getItem(nome));
+  if(!a || !a.sessoes.length) return;
+
+  let ctx = graficoAtleta.getContext("2d");
+  ctx.clearRect(0,0,360,180);
+
+  a.sessoes.forEach((s,i)=>{
+    let media = Object.values(s.fundamentos).reduce((x,y)=>x+y,0)/fundamentos.length;
+    let h = media*1.4;
+    ctx.fillStyle="#7986cb";
+    ctx.fillRect(30+i*40,160-h,30,h);
+  });
+}
+
+/* ===== VOLTAR ===== */
+function sair(){
+  app.classList.add("oculto");
+  login.classList.remove("oculto");
+}
 function voltarLogin(){
   treinador.classList.add("oculto");
   login.classList.remove("oculto");
