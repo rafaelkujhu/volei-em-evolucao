@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vôlei em Evolução</title>
+
+<style>
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+  background:#f2f4f8;
+}
+.app{
+  max-width:420px;
+  margin:auto;
+  background:#fff;
+  min-height:100vh;
+  padding:20px;
+}
+h1{
+  text-align:center;
+  color:#3f51b5;
+}
+.fundamento{
+  margin-top:15px;
+}
+.fundamento strong{
+  display:block;
+  margin-bottom:5px;
+}
+input{
+  width:48%;
+  padding:10px;
+  margin-right:2%;
+  margin-top:5px;
+}
+button{
+  width:100%;
+  padding:15px;
+  margin-top:20px;
+  background:#3f51b5;
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  font-size:16px;
+}
+.resultado{
+  margin-top:20px;
+  padding:15px;
+  border-radius:10px;
+  background:#eef1ff;
+}
+.vermelho{color:#d32f2f;}
+.amarelo{color:#f9a825;}
+.verde{color:#388e3c;}
+</style>
+</head>
+
+<body>
+<div class="app">
+<h1>🏐 Vôlei em Evolução</h1>
+
+<div class="fundamento">
+  <strong>Saque</strong>
+  <input id="saqueA" type="number" placeholder="Acertos">
+  <input id="saqueE" type="number" placeholder="Erros">
+</div>
+
+<div class="fundamento">
+  <strong>Passe</strong>
+  <input id="passeA" type="number" placeholder="Acertos">
+  <input id="passeE" type="number" placeholder="Erros">
+</div>
+
+<div class="fundamento">
+  <strong>Ataque</strong>
+  <input id="ataqueA" type="number" placeholder="Acertos">
+  <input id="ataqueE" type="number" placeholder="Erros">
+</div>
+
+<div class="fundamento">
+  <strong>Defesa</strong>
+  <input id="defesaA" type="number" placeholder="Acertos">
+  <input id="defesaE" type="number" placeholder="Erros">
+</div>
+
+<button onclick="analisar()">Analisar Desempenho</button>
+
+<div id="saida"></div>
+</div>
+
+<script>
+function analisar(){
+  let dados = [
+    {nome:"Saque", a:+saqueA.value, e:+saqueE.value},
+    {nome:"Passe", a:+passeA.value, e:+passeE.value},
+    {nome:"Ataque", a:+ataqueA.value, e:+ataqueE.value},
+    {nome:"Defesa", a:+defesaA.value, e:+defesaE.value}
+  ];
+
+  let resultados = dados.map(f=>{
+    let total = f.a + f.e;
+    let pct = total ? Math.round((f.a/total)*100) : 0;
+    return {...f, pct};
+  });
+
+  let pior = resultados.reduce((a,b)=>a.pct<b.pct?a:b);
+  let melhor = resultados.reduce((a,b)=>a.pct>b.pct?a:b);
+
+  let leitura = `
+    <div class="resultado">
+      🎯 <strong>Prioridade de treino:</strong>
+      <span class="vermelho">${pior.nome} (${pior.pct}%)</span><br><br>
+
+      💪 <strong>Ponto forte:</strong>
+      <span class="verde">${melhor.nome} (${melhor.pct}%)</span><br><br>
+
+      🧠 <em>Leitura:</em> O desempenho do atleta melhora quando há foco em
+      <strong>${pior.nome}</strong>.
+    </div>
+  `;
+
+  saida.innerHTML = leitura;
+}
+</script>
+</body>
+</html>
