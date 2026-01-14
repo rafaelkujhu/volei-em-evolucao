@@ -27,12 +27,9 @@ body{
   padding:16px;
 }
 
-h1,h2{
-  color:var(--primary);
-  margin-bottom:8px;
-}
+h1,h2{color:var(--primary);}
 
-/* INPUTS AJUSTADOS */
+/* INPUTS */
 input,select{
   width:100%;
   padding:10px;
@@ -193,9 +190,17 @@ canvas{
 </div>
 
 <script>
-const META=70;
 let atletaAtual=null;
 const fundamentosLista=["Saque","Passe","Ataque","Defesa"];
+
+/* METAS POR POSIÇÃO */
+const metasPorPosicao={
+  "Levantador(a)":{Saque:60,Passe:80,Ataque:55,Defesa:70},
+  "Ponteiro(a)":{Saque:70,Passe:70,Ataque:75,Defesa:65},
+  "Central":{Saque:60,Passe:65,Ataque:80,Defesa:60},
+  "Oposto(a)":{Saque:65,Passe:60,Ataque:80,Defesa:60},
+  "Líbero":{Saque:0,Passe:85,Ataque:0,Defesa:85}
+};
 
 function entrarApp(){
   if(!nome.value||!idade.value||!genero.value||!posicao.value){
@@ -233,7 +238,9 @@ function carregarPerfil(){
 
 function montarFundamentos(){
   fundamentos.innerHTML="";
+  let pos = JSON.parse(localStorage.getItem(atletaAtual+"_perfil")).posicao;
   fundamentosLista.forEach(f=>{
+    let meta = metasPorPosicao[pos][f];
     fundamentos.innerHTML+=`
     <div class="card">
       <h3>${f}</h3>
@@ -245,7 +252,7 @@ function montarFundamentos(){
         <div id="bar${f}" class="progress-bar"></div>
       </div>
       <div class="meta">
-        <span>Meta ${META}%</span>
+        <span>Meta ${meta}%</span>
         <span id="txt${f}">0%</span>
       </div>
     </div>`;
@@ -254,27 +261,30 @@ function montarFundamentos(){
 
 function analisar(){
   let dados=[];
+  let pos = JSON.parse(localStorage.getItem(atletaAtual+"_perfil")).posicao;
+
   fundamentosLista.forEach(f=>{
     let A=+document.getElementById(f+"A").value||0;
     let E=+document.getElementById(f+"E").value||0;
     let pct=A+E?Math.round(A/(A+E)*100):0;
     dados.push({nome:f,pct});
-    atualizarBarra(f,pct);
+    atualizarBarra(f,pct,metasPorPosicao[pos][f]);
   });
-  mostrarResultado(dados);
+
+  mostrarResultado(dados,pos);
   grafico(dados);
 }
 
-function atualizarBarra(f,pct){
+function atualizarBarra(f,pct,meta){
   let b=document.getElementById("bar"+f);
   let t=document.getElementById("txt"+f);
   t.innerText=pct+"%";
   b.style.width=pct+"%";
-  b.className="progress-bar "+(pct<META?"pb-red":pct<85?"pb-yellow":"pb-green");
+  b.className="progress-bar "+(pct<meta?"pb-red":pct<meta+10?"pb-yellow":"pb-green");
 }
 
 function mostrarResultado(d){
-  let medalhas=d.filter(f=>f.pct>=META).map(()=> "🏅").join("");
+  let medalhas=d.filter(f=>f.pct>=50).map(()=> "🏅").join("");
   saida.innerHTML=`
   <div class="resultado">
     🏆 <strong>Medalhas:</strong> ${medalhas||"Nenhuma ainda"}
