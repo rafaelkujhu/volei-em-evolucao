@@ -6,7 +6,6 @@
 <title>Vôlei em Evolução</title>
 
 <style>
-/* ===== ESTILO EXISTENTE (INALTERADO) ===== */
 :root{
   --primary:#3f51b5;
   --bg:#f2f4f8;
@@ -37,7 +36,6 @@ input,select{
   border-radius:10px;
   border:1px solid #dcdcdc;
   font-size:14px;
-  box-sizing:border-box;
   margin-top:6px;
 }
 
@@ -49,55 +47,33 @@ button{
   color:#fff;
   border:none;
   border-radius:12px;
-  font-size:15px;
 }
 
-.perfil{
-  background:linear-gradient(135deg,#3f51b5,#5c6bc0);
-  color:#fff;
-  padding:12px;
-  border-radius:var(--radius);
-  font-size:13px;
-  line-height:1.5;
-}
-
-.fundamentos{display:grid;gap:12px;}
 .card{
-  background:var(--card);
+  background:#fff;
   padding:12px;
-  border-radius:var(--radius);
+  border-radius:14px;
   box-shadow:0 4px 10px rgba(0,0,0,.05);
+  margin-top:12px;
 }
-
-.grid-inputs{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 
 .progress{
   height:8px;
   background:#e0e4f5;
   border-radius:8px;
   overflow:hidden;
-  margin-top:8px;
 }
 
-.progress-bar{height:100%;width:0%;transition:width .8s ease;}
+.progress-bar{height:100%;width:0%;}
 .pb-red{background:#d32f2f;}
 .pb-yellow{background:#f9a825;}
 .pb-green{background:#388e3c;}
 
-.resultado{
-  background:var(--soft);
-  padding:12px;
-  border-radius:var(--radius);
-  margin-top:12px;
-  font-size:13px;
-}
-
-canvas{margin-top:12px;background:#fff;border-radius:var(--radius);}
+canvas{margin-top:12px;background:#fff;border-radius:14px;}
 .oculto{display:none;}
 
 @media print{
-  button, #login, #treinador{display:none;}
-  body{background:#fff;}
+  button,#login,#treinador{display:none;}
 }
 </style>
 </head>
@@ -105,106 +81,112 @@ canvas{margin-top:12px;background:#fff;border-radius:var(--radius);}
 <body>
 <div class="app">
 
-<!-- TODO O CONTEÚDO DO SEU ARQUIVO PERMANECE IGUAL ATÉ AQUI -->
-<!-- (login, app atleta, fundamentos, dashboard, histórico, etc.) -->
-
-<!-- ===== PDF PEDAGÓGICO (ACRÉSCIMO INVISÍVEL) ===== -->
-<div id="pdfPedagogico" class="oculto">
-  <h2>Relatório Pedagógico do Atleta</h2>
-  <p><strong>Nome:</strong> <span id="pdfNome"></span></p>
-  <p><strong>Idade:</strong> <span id="pdfIdade"></span></p>
-  <p><strong>Posição:</strong> <span id="pdfPosicao"></span></p>
-
-  <h3>Indicadores Corporais</h3>
-  <p>IMC: <span id="pdfIMC"></span></p>
-  <p>IAC: <span id="pdfIAC"></span></p>
-
-  <h3>Última Sessão</h3>
-  <div id="pdfFundamentos"></div>
-
-  <h3>Treino Recomendado</h3>
-  <div id="pdfTreino"></div>
-
-  <p style="margin-top:20px;font-size:12px">
-    Este relatório tem caráter pedagógico e visa acompanhar a evolução
-    técnica e corporal do atleta ao longo do processo esportivo.
-  </p>
+<!-- LOGIN -->
+<div id="login">
+  <h1>🏐 Vôlei em Evolução</h1>
+  <input id="nome" placeholder="Nome">
+  <input id="idade" type="number" placeholder="Idade">
+  <input id="altura" type="number" step="0.01" placeholder="Altura (m)">
+  <input id="peso" type="number" step="0.1" placeholder="Peso (kg)">
+  <input id="quadril" type="number" step="0.1" placeholder="Quadril (cm)">
+  <select id="posicao">
+    <option>Levantador(a)</option>
+    <option>Ponteiro(a)</option>
+    <option>Central</option>
+    <option>Oposto(a)</option>
+    <option>Líbero</option>
+  </select>
+  <button onclick="entrar()">Entrar como atleta</button>
+  <button onclick="abrirTreinador()">Entrar como treinador</button>
 </div>
 
-<!-- ===== MODO TREINADOR – GRÁFICO POR ATLETA ===== -->
-<div id="graficoTreinador" class="oculto">
-  <h3>Evolução do Atleta</h3>
+<!-- APP ATLETA -->
+<div id="app" class="oculto">
+  <h2 id="perfil"></h2>
+
+  <div class="card">
+    <strong>Saque</strong>
+    <input id="SaqueA" placeholder="Acertos">
+    <input id="SaqueE" placeholder="Erros">
+    <div class="progress"><div id="barSaque" class="progress-bar"></div></div>
+  </div>
+
+  <button onclick="analisar()">Analisar</button>
+
+  <div id="saida"></div>
+
+  <canvas id="grafico" width="360" height="180"></canvas>
+
+  <button onclick="gerarPDF()">📄 PDF pedagógico</button>
+  <button onclick="sair()">Sair</button>
+</div>
+
+<!-- TREINADOR -->
+<div id="treinador" class="oculto">
+  <h2>Modo treinador</h2>
+  <div id="listaAtletas"></div>
   <canvas id="graficoAtleta" width="360" height="180"></canvas>
+  <button onclick="voltarLogin()">Voltar</button>
 </div>
 
 </div>
 
 <script>
-/* ===== ACRÉSCIMO: PDF PEDAGÓGICO ===== */
-function gerarPDF(){
-  let atleta = JSON.parse(localStorage.getItem(atletaAtual));
-  if(!atleta) return;
+let atletaAtual=null;
 
-  pdfNome.innerText = atleta.perfil.nome;
-  pdfIdade.innerText = atleta.perfil.idade;
-  pdfPosicao.innerText = atleta.perfil.posicao;
-
-  let imc = (atleta.perfil.peso/(atleta.perfil.altura**2)).toFixed(1);
-  let iac = ((atleta.perfil.quadril/(atleta.perfil.altura*Math.sqrt(atleta.perfil.altura)))-18).toFixed(1);
-
-  pdfIMC.innerText = imc;
-  pdfIAC.innerText = iac;
-
-  let ultima = atleta.sessoes[atleta.sessoes.length-1];
-  let html="";
-  for(let f in ultima.fundamentos){
-    html+=`${f}: ${ultima.fundamentos[f]}%<br>`;
-  }
-  pdfFundamentos.innerHTML = html;
-  pdfTreino.innerHTML = document.getElementById("saida").innerHTML;
-
-  pdfPedagogico.classList.remove("oculto");
-  window.print();
-  pdfPedagogico.classList.add("oculto");
+function entrar(){
+  atletaAtual=nome.value;
+  let atleta={
+    perfil:{nome:nome.value,idade:idade.value,posicao:posicao.value,altura:+altura.value,peso:+peso.value,quadril:+quadril.value},
+    sessoes:[]
+  };
+  localStorage.setItem(atletaAtual,JSON.stringify(atleta));
+  login.classList.add("oculto");
+  app.classList.remove("oculto");
+  perfil.innerText=`${atleta.perfil.nome} (${atleta.perfil.posicao})`;
 }
 
-/* ===== ACRÉSCIMO: GRÁFICO POR ATLETA NO TREINADOR ===== */
-function mostrarGraficoAtleta(nome){
-  let atleta = JSON.parse(localStorage.getItem(nome));
-  if(!atleta) return;
-
-  graficoTreinador.classList.remove("oculto");
-  let ctx = graficoAtleta.getContext("2d");
-  ctx.clearRect(0,0,360,180);
-
-  atleta.sessoes.forEach((s,i)=>{
-    let media = Object.values(s.fundamentos).reduce((a,b)=>a+b,0)/4;
-    let h = media*1.4;
-    ctx.fillStyle="#7986cb";
-    ctx.fillRect(20+i*40,160-h,30,h);
-    ctx.fillText(Math.round(media)+"%",22+i*40,155-h);
-  });
+function analisar(){
+  let atleta=JSON.parse(localStorage.getItem(atletaAtual));
+  let A=+SaqueA.value||0,E=+SaqueE.value||0;
+  let pct=A+E?Math.round(A/(A+E)*100):0;
+  barSaque.style.width=pct+"%";
+  barSaque.className="progress-bar "+(pct<60?"pb-red":pct<80?"pb-yellow":"pb-green");
+  atleta.sessoes.push({fundamentos:{Saque:pct}});
+  localStorage.setItem(atletaAtual,JSON.stringify(atleta));
+  saida.innerHTML=`Resultado do saque: ${pct}%`;
 }
 
-/* ===== ACRÉSCIMO NO LISTADOR DO TREINADOR ===== */
+function gerarPDF(){window.print();}
+function sair(){app.classList.add("oculto");login.classList.remove("oculto");}
+
 function abrirTreinador(){
   login.classList.add("oculto");
   treinador.classList.remove("oculto");
-
   let html="";
   for(let k in localStorage){
-    try{
-      let a=JSON.parse(localStorage.getItem(k));
-      if(a?.perfil){
-        html+=`
-        <div class="card" onclick="mostrarGraficoAtleta('${a.perfil.nome}')">
-          <strong>${a.perfil.nome}</strong><br>
-          ${a.perfil.posicao}
-        </div>`;
-      }
-    }catch{}
+    let a=JSON.parse(localStorage.getItem(k));
+    if(a?.perfil){
+      html+=`<div class="card" onclick="mostrarGrafico('${k}')">${a.perfil.nome}</div>`;
+    }
   }
   listaAtletas.innerHTML=html;
+}
+
+function mostrarGrafico(nome){
+  let a=JSON.parse(localStorage.getItem(nome));
+  let ctx=graficoAtleta.getContext("2d");
+  ctx.clearRect(0,0,360,180);
+  a.sessoes.forEach((s,i)=>{
+    let h=s.fundamentos.Saque*1.4;
+    ctx.fillStyle="#3f51b5";
+    ctx.fillRect(20+i*40,160-h,30,h);
+  });
+}
+
+function voltarLogin(){
+  treinador.classList.add("oculto");
+  login.classList.remove("oculto");
 }
 </script>
 </body>
