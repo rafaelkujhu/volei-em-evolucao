@@ -1,197 +1,9 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vôlei em Evolução</title>
-
-<style>
-:root{
-  --primary:#3f51b5;
-  --bg:#f2f4f8;
-  --card:#ffffff;
-  --soft:#f7f9ff;
-  --radius:14px;
-}
-
-body{
-  margin:0;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-  background:var(--bg);
-}
-
-.app{
-  max-width:420px;
-  margin:auto;
-  min-height:100vh;
-  padding:16px;
-}
-
-h1,h2{color:var(--primary);}
-
-/* INPUTS */
-input,select{
-  width:100%;
-  padding:10px;
-  height:42px;
-  border-radius:10px;
-  border:1px solid #dcdcdc;
-  font-size:14px;
-  box-sizing:border-box;
-}
-
-button{
-  width:100%;
-  padding:14px;
-  margin-top:14px;
-  background:var(--primary);
-  color:#fff;
-  border:none;
-  border-radius:12px;
-  font-size:15px;
-}
-
-/* PERFIL */
-.perfil{
-  background:linear-gradient(135deg,#3f51b5,#5c6bc0);
-  color:#fff;
-  padding:12px;
-  border-radius:var(--radius);
-  font-size:13px;
-  margin-bottom:14px;
-  line-height:1.4;
-}
-
-/* FUNDAMENTOS */
-.fundamentos{
-  display:grid;
-  gap:12px;
-}
-
-.card{
-  background:var(--card);
-  padding:12px;
-  border-radius:var(--radius);
-  box-shadow:0 4px 10px rgba(0,0,0,.05);
-}
-
-.card h3{
-  margin:0 0 8px;
-  font-size:15px;
-  color:var(--primary);
-}
-
-.grid-inputs{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-}
-
-/* PROGRESSO */
-.progress{
-  height:8px;
-  background:#e0e4f5;
-  border-radius:8px;
-  overflow:hidden;
-  margin-top:8px;
-}
-
-.progress-bar{
-  height:100%;
-  width:0%;
-  transition:width .8s ease;
-}
-
-.pb-red{background:#d32f2f;}
-.pb-yellow{background:#f9a825;}
-.pb-green{background:#388e3c;}
-
-.meta{
-  font-size:12px;
-  margin-top:6px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  color:#555;
-}
-
-/* RESULTADO */
-.resultado{
-  background:var(--soft);
-  padding:12px;
-  border-radius:var(--radius);
-  margin-top:12px;
-  font-size:13px;
-}
-
-canvas{
-  margin-top:12px;
-  background:#fff;
-  border-radius:var(--radius);
-}
-
-.oculto{display:none;}
-</style>
-</head>
-
-<body>
-<div class="app">
-
-<!-- LOGIN -->
-<div id="telaLogin">
-  <h1>🏐 Vôlei em Evolução</h1>
-
-  <input id="nome" placeholder="Nome do atleta">
-  <input id="idade" type="number" placeholder="Idade">
-
-  <select id="genero">
-    <option value="">Gênero</option>
-    <option>Feminino</option>
-    <option>Masculino</option>
-    <option>Outro</option>
-  </select>
-
-  <select id="posicao">
-    <option value="">Posição</option>
-    <option>Levantador(a)</option>
-    <option>Ponteiro(a)</option>
-    <option>Central</option>
-    <option>Oposto(a)</option>
-    <option>Líbero</option>
-  </select>
-
-  <button onclick="entrarApp()">Entrar</button>
-</div>
-
-<!-- APP -->
-<div id="app" class="oculto">
-
-<div class="perfil">
-<strong>Atleta:</strong> <span id="pNome"></span><br>
-<strong>Idade:</strong> <span id="pIdade"></span> anos ·
-<strong>Gênero:</strong> <span id="pGenero"></span><br>
-<strong>Posição:</strong> <span id="pPosicao"></span>
-</div>
-
-<h2>Fundamentos</h2>
-<div class="fundamentos" id="fundamentos"></div>
-
-<button onclick="analisar()">Analisar Sessão</button>
-
-<div id="saida"></div>
-
-<h2>Dashboard</h2>
-<canvas id="grafico" width="360" height="180"></canvas>
-
-<button onclick="gerarPDF()">📄 Gerar Relatório em PDF</button>
-<button onclick="sair()">Trocar Atleta</button>
-
-</div>
-</div>
-
 <script>
-let atletaAtual=null;
+/* ======================
+   CONFIGURAÇÕES GERAIS
+====================== */
 const fundamentosLista=["Saque","Passe","Ataque","Defesa"];
+let atletaAtual=null;
 
 /* METAS POR POSIÇÃO */
 const metasPorPosicao={
@@ -202,19 +14,50 @@ const metasPorPosicao={
   "Líbero":{Saque:0,Passe:85,Ataque:0,Defesa:85}
 };
 
+/* TREINOS POR POSIÇÃO */
+const treinosPorPosicao={
+  "Levantador(a)":{
+    Passe:["Passe em deslocamento","Tomada de decisão","Coordenação mãos e pernas"],
+    Saque:["Saque controle","Rotina técnica","Consistência"]
+  },
+  "Central":{
+    Ataque:["Tempo de ataque","Impulsão controlada","Coordenação salto-braço"],
+    Passe:["Passe simples","Base motora","Controle corporal"]
+  },
+  "Ponteiro(a)":{
+    Ataque:["Ataque em situação real","Transição defesa-ataque","Velocidade + controle"]
+  },
+  "Oposto(a)":{
+    Ataque:["Finalização forte","Explosão","Eficiência ofensiva"]
+  },
+  "Líbero":{
+    Defesa:["Defesa baixa","Reação rápida","Leitura de jogo"],
+    Passe:["Passe de precisão","Estabilidade","Consistência"]
+  }
+};
+
+/* ======================
+   LOGIN / PERFIL
+====================== */
 function entrarApp(){
   if(!nome.value||!idade.value||!genero.value||!posicao.value){
     alert("Preencha todo o perfil");
     return;
   }
 
-  atletaAtual=nome.value;
-  localStorage.setItem(atletaAtual+"_perfil",JSON.stringify({
-    nome:nome.value,
-    idade:idade.value,
-    genero:genero.value,
-    posicao:posicao.value
-  }));
+  atletaAtual = nome.value;
+
+  let atleta = {
+    perfil:{
+      nome:nome.value,
+      idade:idade.value,
+      genero:genero.value,
+      posicao:posicao.value
+    },
+    sessoes:[]
+  };
+
+  localStorage.setItem(atletaAtual, JSON.stringify(atleta));
 
   carregarPerfil();
   montarFundamentos();
@@ -223,22 +66,22 @@ function entrarApp(){
   app.classList.remove("oculto");
 }
 
-function sair(){
-  app.classList.add("oculto");
-  telaLogin.classList.remove("oculto");
-}
-
 function carregarPerfil(){
-  let p=JSON.parse(localStorage.getItem(atletaAtual+"_perfil"));
-  pNome.innerText=p.nome;
-  pIdade.innerText=p.idade;
-  pGenero.innerText=p.genero;
-  pPosicao.innerText=p.posicao;
+  let atleta = JSON.parse(localStorage.getItem(atletaAtual));
+  pNome.innerText=atleta.perfil.nome;
+  pIdade.innerText=atleta.perfil.idade;
+  pGenero.innerText=atleta.perfil.genero;
+  pPosicao.innerText=atleta.perfil.posicao;
 }
 
+/* ======================
+   FUNDAMENTOS
+====================== */
 function montarFundamentos(){
   fundamentos.innerHTML="";
-  let pos = JSON.parse(localStorage.getItem(atletaAtual+"_perfil")).posicao;
+  let atleta = JSON.parse(localStorage.getItem(atletaAtual));
+  let pos = atleta.perfil.posicao;
+
   fundamentosLista.forEach(f=>{
     let meta = metasPorPosicao[pos][f];
     fundamentos.innerHTML+=`
@@ -259,22 +102,37 @@ function montarFundamentos(){
   });
 }
 
+/* ======================
+   ANÁLISE + SALVAR
+====================== */
 function analisar(){
-  let dados=[];
-  let pos = JSON.parse(localStorage.getItem(atletaAtual+"_perfil")).posicao;
+  let atleta = JSON.parse(localStorage.getItem(atletaAtual));
+  let pos = atleta.perfil.posicao;
+
+  let sessao = {
+    data: new Date().toLocaleString(),
+    fundamentos:[]
+  };
 
   fundamentosLista.forEach(f=>{
     let A=+document.getElementById(f+"A").value||0;
     let E=+document.getElementById(f+"E").value||0;
     let pct=A+E?Math.round(A/(A+E)*100):0;
-    dados.push({nome:f,pct});
+
+    sessao.fundamentos.push({nome:f,pct});
     atualizarBarra(f,pct,metasPorPosicao[pos][f]);
   });
 
-  mostrarResultado(dados,pos);
-  grafico(dados);
+  atleta.sessoes.push(sessao);
+  localStorage.setItem(atletaAtual, JSON.stringify(atleta));
+
+  gerarTreino(pos, sessao);
+  renderizarGrafico(sessao.fundamentos);
 }
 
+/* ======================
+   BARRAS
+====================== */
 function atualizarBarra(f,pct,meta){
   let b=document.getElementById("bar"+f);
   let t=document.getElementById("txt"+f);
@@ -283,29 +141,51 @@ function atualizarBarra(f,pct,meta){
   b.className="progress-bar "+(pct<meta?"pb-red":pct<meta+10?"pb-yellow":"pb-green");
 }
 
-function mostrarResultado(d){
-  let medalhas=d.filter(f=>f.pct>=50).map(()=> "🏅").join("");
-  saida.innerHTML=`
-  <div class="resultado">
-    🏆 <strong>Medalhas:</strong> ${medalhas||"Nenhuma ainda"}
-  </div>`;
+/* ======================
+   TREINO AUTOMÁTICO
+====================== */
+function gerarTreino(posicao,sessao){
+  let pior = sessao.fundamentos.reduce((a,b)=>a.pct<b.pct?a:b);
+  let lista = treinosPorPosicao[posicao]?.[pior.nome];
+
+  let html=`<div class="resultado">
+  📋 <strong>Treino sugerido (${pior.nome})</strong><br>`;
+
+  if(lista){
+    lista.forEach(i=>html+=`• ${i}<br>`);
+  }else{
+    html+=`• Treino técnico geral<br>• Base motora<br>• Controle`;
+  }
+
+  html+="</div>";
+  saida.innerHTML=html;
 }
 
-function grafico(d){
-  let c=grafico.getContext("2d");
-  c.clearRect(0,0,360,180);
-  d.forEach((f,i)=>{
-    let h=f.pct*1.4;
-    c.fillStyle="#3f51b5";
-    c.fillRect(30+i*80,160-h,46,h);
-    c.fillText(f.nome,30+i*80,175);
-    c.fillText(f.pct+"%",34+i*80,150-h);
+/* ======================
+   DASHBOARD (CORRIGIDO)
+====================== */
+function renderizarGrafico(dados){
+  let canvas = document.getElementById("grafico");
+  let ctx = canvas.getContext("2d");
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  dados.forEach((f,i)=>{
+    let altura = f.pct * 1.4;
+    ctx.fillStyle="#3f51b5";
+    ctx.fillRect(30+i*80,160-altura,46,altura);
+    ctx.fillText(f.nome,30+i*80,175);
+    ctx.fillText(f.pct+"%",35+i*80,145-altura);
   });
 }
 
-function gerarPDF(){
-  window.print();
+/* ======================
+   OUTROS
+====================== */
+function gerarPDF(){ window.print(); }
+
+function sair(){
+  app.classList.add("oculto");
+  telaLogin.classList.remove("oculto");
 }
 </script>
-</body>
-</html>
