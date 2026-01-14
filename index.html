@@ -36,7 +36,6 @@ button{
   font-size:16px;
 }
 .fundamento{margin-top:15px;}
-.fundamento strong{display:block;margin-bottom:5px;}
 .duplo input{width:48%;display:inline-block;}
 .resultado{
   margin-top:20px;
@@ -47,18 +46,44 @@ button{
 .vermelho{color:#d32f2f;}
 .amarelo{color:#f9a825;}
 .verde{color:#388e3c;}
-canvas{margin-top:20px;background:#fff;}
+canvas{margin-top:20px;}
 .oculto{display:none;}
+.perfil{
+  background:#f7f9ff;
+  padding:12px;
+  border-radius:10px;
+  margin-bottom:10px;
+  font-size:14px;
+}
 </style>
 </head>
 
 <body>
 <div class="app">
 
-<!-- LOGIN -->
+<!-- PERFIL / LOGIN ATLETA -->
 <div id="login">
   <h1>🏐 Vôlei em Evolução</h1>
-  <input id="nomeAtleta" placeholder="Nome do atleta">
+
+  <input id="nome" placeholder="Nome do atleta">
+  <input id="idade" type="number" placeholder="Idade">
+
+  <select id="genero">
+    <option value="">Gênero</option>
+    <option>Feminino</option>
+    <option>Masculino</option>
+    <option>Outro</option>
+  </select>
+
+  <select id="posicao">
+    <option value="">Posição</option>
+    <option>Levantador(a)</option>
+    <option>Ponteiro(a)</option>
+    <option>Central</option>
+    <option>Oposto(a)</option>
+    <option>Líbero</option>
+  </select>
+
   <button onclick="login()">Entrar</button>
 </div>
 
@@ -66,7 +91,13 @@ canvas{margin-top:20px;background:#fff;}
 <div id="app" class="oculto">
 
 <h1>🏐 Vôlei em Evolução</h1>
-<p><strong>Atleta:</strong> <span id="atletaNome"></span></p>
+
+<div class="perfil">
+<strong>Atleta:</strong> <span id="pNome"></span><br>
+<strong>Idade:</strong> <span id="pIdade"></span> anos<br>
+<strong>Gênero:</strong> <span id="pGenero"></span><br>
+<strong>Posição:</strong> <span id="pPosicao"></span>
+</div>
 
 <!-- FUNDAMENTOS -->
 <h2>Fundamentos</h2>
@@ -91,8 +122,9 @@ canvas{margin-top:20px;background:#fff;}
 
 <!-- COORDENAÇÃO -->
 <h2>Coordenação & Consciência Corporal</h2>
+
 <select id="coord">
-  <option value="0">Selecione o nível</option>
+  <option value="0">Coordenação</option>
   <option value="40">Baixa</option>
   <option value="65">Média</option>
   <option value="85">Boa</option>
@@ -107,10 +139,8 @@ canvas{margin-top:20px;background:#fff;}
 
 <button onclick="avaliarCorporal()">Avaliar Corpo</button>
 
-<!-- RESULTADO -->
 <div id="saida"></div>
 
-<!-- DASHBOARD -->
 <h2>Dashboard</h2>
 <canvas id="grafico" width="360" height="200"></canvas>
 
@@ -120,39 +150,57 @@ canvas{margin-top:20px;background:#fff;}
 </div>
 
 <script>
-let atletaAtual = null;
+let atletaAtual=null;
 
-// LOGIN
+// LOGIN ATLETA
 function login(){
-  let nome = nomeAtleta.value.trim();
-  if(!nome) return alert("Informe o nome do atleta");
-  atletaAtual = nome;
-  atletaNome.innerText = nome;
-  loginDiv(false);
+  if(!nome.value||!idade.value||!genero.value||!posicao.value)
+    return alert("Preencha todo o perfil");
+
+  atletaAtual = nome.value;
+  localStorage.setItem(atletaAtual+"_perfil", JSON.stringify({
+    nome:nome.value,
+    idade:idade.value,
+    genero:genero.value,
+    posicao:posicao.value
+  }));
+
+  carregarPerfil();
+  mostrarApp(true);
 }
+
 function logout(){
   atletaAtual=null;
-  loginDiv(true);
+  mostrarApp(false);
 }
-function loginDiv(show){
-  document.getElementById("login").classList.toggle("oculto",!show);
-  document.getElementById("app").classList.toggle("oculto",show);
+
+function mostrarApp(on){
+  document.getElementById("login").classList.toggle("oculto",on);
+  document.getElementById("app").classList.toggle("oculto",!on);
+}
+
+function carregarPerfil(){
+  let p = JSON.parse(localStorage.getItem(atletaAtual+"_perfil"));
+  pNome.innerText=p.nome;
+  pIdade.innerText=p.idade;
+  pGenero.innerText=p.genero;
+  pPosicao.innerText=p.posicao;
 }
 
 // HISTÓRICO
-function salvar(dado){
-  let h = JSON.parse(localStorage.getItem(atletaAtual))||[];
-  h.push(dado);
+function salvar(d){
+  let h=JSON.parse(localStorage.getItem(atletaAtual))||[];
+  h.push(d);
   localStorage.setItem(atletaAtual,JSON.stringify(h));
 }
 
 // ANÁLISE FUNDAMENTOS
 function analisar(){
   let dados=[
-    pct(saqueA,saqueE,"Saque"),
-    pct(passeA,passeE,"Passe"),
-    pct(ataqueA,ataqueE,"Ataque"),
-    pct(defesaA,defesaE,"Defesa")
+    calc("Saque",saqueA,saqueE),
+    calc("Passe",passeA,passeE),
+    calc("Ataque",ataqueA,ataqueE),
+    calc("Defesa",defesaA,defesaE)
   ];
 
   let pior=dados.reduce((a,b)=>a.pct<b.pct?a:b);
@@ -162,50 +210,45 @@ function analisar(){
   let nivel=media<50?"Iniciante":media<75?"Intermediário":"Avançado";
 
   salvar({tipo:"fundamentos",dados,media,nivel,data:new Date()});
-  desenharGrafico(dados);
+  grafico(dados);
 
   saida.innerHTML=`
   <div class="resultado">
   🎯 <strong>Prioridade:</strong> <span class="vermelho">${pior.nome}</span><br>
   💪 <strong>Ponto forte:</strong> <span class="verde">${melhor.nome}</span><br>
-  📊 Média: ${media}%<br>
-  🏷️ Nível: ${nivel}
+  📊 <strong>Média:</strong> ${media}%<br>
+  🏷️ <strong>Nível:</strong> ${nivel}
   </div>`;
 }
-function pct(a,e,n){
+
+// CÁLCULO
+function calc(n,a,e){
   let A=+a.value||0,E=+e.value||0;
   let t=A+E;
   return {nome:n,pct:t?Math.round(A/t*100):0};
 }
 
-// COORDENAÇÃO
+// AVALIAÇÃO CORPORAL
 function avaliarCorporal(){
-  let c=+coord.value,d=+cons.value;
-  if(!c||!d) return alert("Selecione os níveis");
-  let media=Math.round((c+d)/2);
-  let leitura=media<60?"Trabalhar base motora":
-               media<80?"Boa evolução":"Excelente controle corporal";
+  let m=Math.round((+coord.value + +cons.value)/2);
+  let txt=m<60?"Trabalhar base motora":
+          m<80?"Boa evolução corporal":
+          "Excelente controle corporal";
 
-  salvar({tipo:"corporal",media,data:new Date()});
-
-  saida.innerHTML+=`
-  <div class="resultado">
-  🧠 <strong>Consciência corporal:</strong> ${media}%<br>
-  📌 ${leitura}
-  </div>`;
+  salvar({tipo:"corporal",media:m,data:new Date()});
+  saida.innerHTML+=`<div class="resultado">🧠 ${txt} (${m}%)</div>`;
 }
 
 // GRÁFICO
-function desenharGrafico(dados){
-  let ctx=document.getElementById("grafico").getContext("2d");
-  ctx.clearRect(0,0,360,200);
-  let w=60;
-  dados.forEach((d,i)=>{
-    let h=d.pct*1.5;
-    ctx.fillStyle="#3f51b5";
-    ctx.fillRect(30+i*80,180-h,w,h);
-    ctx.fillText(d.nome,30+i*80,195);
-    ctx.fillText(d.pct+"%",40+i*80,170-h);
+function grafico(d){
+  let c=grafico.getContext("2d");
+  c.clearRect(0,0,360,200);
+  d.forEach((f,i)=>{
+    let h=f.pct*1.5;
+    c.fillStyle="#3f51b5";
+    c.fillRect(30+i*80,180-h,50,h);
+    c.fillText(f.nome,30+i*80,195);
+    c.fillText(f.pct+"%",35+i*80,165-h);
   });
 }
 </script>
