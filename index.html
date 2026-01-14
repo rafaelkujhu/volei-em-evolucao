@@ -38,6 +38,7 @@ input,select{
   border:1px solid #dcdcdc;
   font-size:14px;
   box-sizing:border-box;
+  margin-top:6px;
 }
 
 button{
@@ -110,6 +111,9 @@ canvas{
   border-radius:var(--radius);
 }
 
+.alerta{color:#ffdada;font-weight:600;}
+.ok{color:#d7ffda;font-weight:600;}
+
 .oculto{display:none;}
 </style>
 </head>
@@ -123,6 +127,11 @@ canvas{
 
   <input id="nome" placeholder="Nome do atleta">
   <input id="idade" type="number" placeholder="Idade">
+
+  <!-- ACRÉSCIMO CORPORAL -->
+  <input id="altura" type="number" step="0.01" placeholder="Altura (m)">
+  <input id="peso" type="number" step="0.1" placeholder="Peso (kg)">
+  <input id="quadril" type="number" step="0.1" placeholder="Quadril (cm)">
 
   <select id="genero">
     <option value="">Gênero</option>
@@ -149,7 +158,10 @@ canvas{
 <strong>Atleta:</strong> <span id="pNome"></span><br>
 <strong>Idade:</strong> <span id="pIdade"></span> ·
 <strong>Gênero:</strong> <span id="pGenero"></span><br>
-<strong>Posição:</strong> <span id="pPosicao"></span>
+<strong>Posição:</strong> <span id="pPosicao"></span><br>
+<strong>IMC:</strong> <span id="pIMC"></span> ·
+<strong>IAC:</strong> <span id="pIAC"></span><br>
+<span id="alertaSaude"></span>
 </div>
 
 <h2>Fundamentos</h2>
@@ -162,6 +174,9 @@ canvas{
       <input id="SaqueE" type="number" placeholder="Erros">
     </div>
     <div class="progress"><div id="barSaque" class="progress-bar"></div></div>
+
+    <!-- AVALIAÇÃO POR VÍDEO -->
+    <input type="file" accept="video/*" onchange="registrarVideo('Saque',this.files[0])">
   </div>
 
   <div class="card">
@@ -171,6 +186,8 @@ canvas{
       <input id="PasseE" type="number" placeholder="Erros">
     </div>
     <div class="progress"><div id="barPasse" class="progress-bar"></div></div>
+
+    <input type="file" accept="video/*" onchange="registrarVideo('Passe',this.files[0])">
   </div>
 
   <div class="card">
@@ -180,6 +197,8 @@ canvas{
       <input id="AtaqueE" type="number" placeholder="Erros">
     </div>
     <div class="progress"><div id="barAtaque" class="progress-bar"></div></div>
+
+    <input type="file" accept="video/*" onchange="registrarVideo('Ataque',this.files[0])">
   </div>
 
   <div class="card">
@@ -189,6 +208,8 @@ canvas{
       <input id="DefesaE" type="number" placeholder="Erros">
     </div>
     <div class="progress"><div id="barDefesa" class="progress-bar"></div></div>
+
+    <input type="file" accept="video/*" onchange="registrarVideo('Defesa',this.files[0])">
   </div>
 </div>
 
@@ -205,14 +226,12 @@ canvas{
 </div>
 
 <script>
-/* =====================================================
-   BASE DE DADOS – NÃO AFETA VISUAL
-===================================================== */
+/* ================= BASE DE DADOS ================= */
 let atletaAtual=null;
 
+/* ================= LOGIN ================= */
 function entrar(){
   atletaAtual = nome.value;
-
   if(!atletaAtual) return alert("Informe o nome");
 
   let atleta = JSON.parse(localStorage.getItem(atletaAtual)) || {
@@ -225,7 +244,10 @@ function entrar(){
     nome:nome.value,
     idade:idade.value,
     genero:genero.value,
-    posicao:posicao.value
+    posicao:posicao.value,
+    altura:+altura.value,
+    peso:+peso.value,
+    quadril:+quadril.value
   };
 
   localStorage.setItem(atletaAtual, JSON.stringify(atleta));
@@ -235,20 +257,33 @@ function entrar(){
   app.classList.remove("oculto");
 }
 
+/* ================= PERFIL ================= */
 function carregarPerfil(){
   let a = JSON.parse(localStorage.getItem(atletaAtual));
   pNome.innerText=a.perfil.nome;
   pIdade.innerText=a.perfil.idade;
   pGenero.innerText=a.perfil.genero;
   pPosicao.innerText=a.perfil.posicao;
+
+  calcularIMCeIAC(a.perfil);
 }
 
-/* =====================================================
-   ANÁLISE + HISTÓRICO
-===================================================== */
+function calcularIMCeIAC(p){
+  let imc=(p.peso/(p.altura*p.altura)).toFixed(1);
+  let iac=((p.quadril/(p.altura*Math.sqrt(p.altura)))-18).toFixed(1);
+
+  pIMC.innerText=imc;
+  pIAC.innerText=iac;
+
+  alertaSaude.innerHTML =
+    (imc<18.5||imc>25||iac>35)
+    ? "<span class='alerta'>⚠ Atenção aos indicadores corporais</span>"
+    : "<span class='ok'>✓ Indicadores adequados</span>";
+}
+
+/* ================= ANÁLISE ================= */
 function analisar(){
   let atleta = JSON.parse(localStorage.getItem(atletaAtual));
-
   let fundamentos=["Saque","Passe","Ataque","Defesa"];
   let dados={};
 
@@ -265,7 +300,8 @@ function analisar(){
 
   atleta.sessoes.push({
     data:new Date().toISOString(),
-    fundamentos:dados
+    fundamentos:dados,
+    corporal:{coordenacao:null,consciencia:null}
   });
 
   localStorage.setItem(atletaAtual, JSON.stringify(atleta));
@@ -274,12 +310,9 @@ function analisar(){
   desenharDashboard(dados);
 }
 
-/* =====================================================
-   TREINO AUTOMÁTICO (PIOR FUNDAMENTO)
-===================================================== */
+/* ================= TREINO AUTOMÁTICO ================= */
 function gerarTreinoAutomatico(dados){
   let pior = Object.entries(dados).sort((a,b)=>a[1]-b[1])[0][0];
-
   const treinos={
     Saque:["Controle de alvo","Rotina técnica","Repetição"],
     Passe:["Passe em deslocamento","Base motora","Precisão"],
@@ -294,9 +327,7 @@ function gerarTreinoAutomatico(dados){
   </div>`;
 }
 
-/* =====================================================
-   DASHBOARD
-===================================================== */
+/* ================= DASHBOARD ================= */
 function desenharDashboard(d){
   let ctx=grafico.getContext("2d");
   ctx.clearRect(0,0,360,180);
@@ -311,10 +342,9 @@ function desenharDashboard(d){
   }
 }
 
-/* =====================================================
-   IA FUTURA – AVALIAÇÃO POR VÍDEO (BASE)
-===================================================== */
+/* ================= VÍDEO – BASE IA ================= */
 function registrarVideo(fundamento,arquivo){
+  if(!arquivo) return;
   let atleta = JSON.parse(localStorage.getItem(atletaAtual));
   atleta.videos.push({
     fundamento,
@@ -324,20 +354,7 @@ function registrarVideo(fundamento,arquivo){
   localStorage.setItem(atletaAtual, JSON.stringify(atleta));
 }
 
-/* =====================================================
-   MODO TREINADOR – BASE
-===================================================== */
-function listarAtletas(){
-  let atletas=[];
-  for(let k in localStorage){
-    try{
-      let a=JSON.parse(localStorage.getItem(k));
-      if(a?.perfil) atletas.push(a.perfil.nome);
-    }catch{}
-  }
-  return atletas;
-}
-
+/* ================= OUTROS ================= */
 function sair(){
   app.classList.add("oculto");
   login.classList.remove("oculto");
