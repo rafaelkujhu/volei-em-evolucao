@@ -9,7 +9,7 @@
 :root{
   --primary:#3f51b5;
   --bg:#f2f4f8;
-  --card:#fff;
+  --card:#ffffff;
   --soft:#f7f9ff;
   --radius:14px;
 }
@@ -29,13 +29,15 @@ body{
 
 h1,h2{color:var(--primary);}
 
+/* INPUTS APROVADOS */
 input,select{
   width:100%;
   padding:10px;
   height:42px;
   border-radius:10px;
-  border:1px solid #ddd;
-  margin-top:8px;
+  border:1px solid #dcdcdc;
+  font-size:14px;
+  box-sizing:border-box;
 }
 
 button{
@@ -49,6 +51,7 @@ button{
   font-size:15px;
 }
 
+/* PERFIL */
 .perfil{
   background:linear-gradient(135deg,#3f51b5,#5c6bc0);
   color:#fff;
@@ -58,14 +61,20 @@ button{
   line-height:1.4;
 }
 
+/* FUNDAMENTOS */
+.fundamentos{
+  display:grid;
+  gap:12px;
+}
+
 .card{
   background:var(--card);
   padding:12px;
   border-radius:var(--radius);
-  margin-top:12px;
+  box-shadow:0 4px 10px rgba(0,0,0,.05);
 }
 
-.grid{
+.grid-inputs{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:8px;
@@ -76,16 +85,27 @@ button{
   background:#e0e4f5;
   border-radius:8px;
   overflow:hidden;
-  margin-top:6px;
+  margin-top:8px;
 }
+
 .progress-bar{
   height:100%;
   width:0%;
   transition:width .8s ease;
 }
+
 .pb-red{background:#d32f2f;}
 .pb-yellow{background:#f9a825;}
 .pb-green{background:#388e3c;}
+
+/* RESULTADOS */
+.resultado{
+  background:var(--soft);
+  padding:12px;
+  border-radius:var(--radius);
+  margin-top:12px;
+  font-size:13px;
+}
 
 canvas{
   margin-top:12px;
@@ -94,6 +114,8 @@ canvas{
 }
 
 .oculto{display:none;}
+.alerta{color:#d32f2f;font-weight:600;}
+.ok{color:#388e3c;font-weight:600;}
 </style>
 </head>
 
@@ -108,7 +130,7 @@ canvas{
   <input id="idade" type="number" placeholder="Idade">
   <input id="altura" type="number" step="0.01" placeholder="Altura (m)">
   <input id="peso" type="number" step="0.1" placeholder="Peso (kg)">
-  <input id="quadril" type="number" step="0.1" placeholder="Circunferência do quadril (cm)">
+  <input id="quadril" type="number" step="0.1" placeholder="Quadril (cm)">
 
   <select id="genero">
     <option value="">Gênero</option>
@@ -137,52 +159,59 @@ canvas{
 <strong>Gênero:</strong> <span id="pGenero"></span><br>
 <strong>Posição:</strong> <span id="pPosicao"></span><br>
 <strong>IMC:</strong> <span id="pIMC"></span> ·
-<strong>IAC:</strong> <span id="pIAC"></span>
+<strong>IAC:</strong> <span id="pIAC"></span><br>
+<span id="alertaSaude"></span>
 </div>
 
 <h2>Fundamentos</h2>
 
-<div class="card">
-  <strong>Saque</strong>
-  <div class="grid">
-    <input id="SaqueA" type="number" placeholder="Acertos">
-    <input id="SaqueE" type="number" placeholder="Erros">
+<div class="fundamentos">
+  <div class="card">
+    <strong>Saque</strong>
+    <div class="grid-inputs">
+      <input id="SaqueA" type="number" placeholder="Acertos">
+      <input id="SaqueE" type="number" placeholder="Erros">
+    </div>
+    <div class="progress"><div id="barSaque" class="progress-bar"></div></div>
   </div>
-  <div class="progress"><div id="barSaque" class="progress-bar"></div></div>
-</div>
 
-<div class="card">
-  <strong>Passe</strong>
-  <div class="grid">
-    <input id="PasseA" type="number" placeholder="Acertos">
-    <input id="PasseE" type="number" placeholder="Erros">
+  <div class="card">
+    <strong>Passe</strong>
+    <div class="grid-inputs">
+      <input id="PasseA" type="number" placeholder="Acertos">
+      <input id="PasseE" type="number" placeholder="Erros">
+    </div>
+    <div class="progress"><div id="barPasse" class="progress-bar"></div></div>
   </div>
-  <div class="progress"><div id="barPasse" class="progress-bar"></div></div>
-</div>
 
-<div class="card">
-  <strong>Ataque</strong>
-  <div class="grid">
-    <input id="AtaqueA" type="number" placeholder="Acertos">
-    <input id="AtaqueE" type="number" placeholder="Erros">
+  <div class="card">
+    <strong>Ataque</strong>
+    <div class="grid-inputs">
+      <input id="AtaqueA" type="number" placeholder="Acertos">
+      <input id="AtaqueE" type="number" placeholder="Erros">
+    </div>
+    <div class="progress"><div id="barAtaque" class="progress-bar"></div></div>
   </div>
-  <div class="progress"><div id="barAtaque" class="progress-bar"></div></div>
-</div>
 
-<div class="card">
-  <strong>Defesa</strong>
-  <div class="grid">
-    <input id="DefesaA" type="number" placeholder="Acertos">
-    <input id="DefesaE" type="number" placeholder="Erros">
+  <div class="card">
+    <strong>Defesa</strong>
+    <div class="grid-inputs">
+      <input id="DefesaA" type="number" placeholder="Acertos">
+      <input id="DefesaE" type="number" placeholder="Erros">
+    </div>
+    <div class="progress"><div id="barDefesa" class="progress-bar"></div></div>
   </div>
-  <div class="progress"><div id="barDefesa" class="progress-bar"></div></div>
 </div>
 
 <button onclick="analisar()">Analisar Sessão</button>
 
-<h2>Histórico Visual</h2>
-<canvas id="historico" width="360" height="180"></canvas>
+<h2>Dashboard</h2>
+<canvas id="grafico" width="360" height="180"></canvas>
 
+<button onclick="toggleHistorico()">📈 Ver evolução</button>
+<canvas id="historico" width="360" height="180" class="oculto"></canvas>
+
+<button onclick="gerarPDF()">📄 Gerar Relatório PDF</button>
 <button onclick="sair()">Trocar Atleta</button>
 
 </div>
@@ -191,6 +220,7 @@ canvas{
 <script>
 let atleta=null;
 
+/* LOGIN */
 function entrar(){
   atleta={
     nome:nome.value,
@@ -212,27 +242,31 @@ function entrar(){
   carregar();
 }
 
+/* PERFIL */
 function carregar(){
-  let a=JSON.parse(localStorage.getItem(atleta.nome));
-  atleta=a;
+  atleta=JSON.parse(localStorage.getItem(atleta.nome));
 
-  pNome.innerText=a.nome;
-  pIdade.innerText=a.idade;
-  pGenero.innerText=a.genero;
-  pPosicao.innerText=a.posicao;
+  pNome.innerText=atleta.nome;
+  pIdade.innerText=atleta.idade;
+  pGenero.innerText=atleta.genero;
+  pPosicao.innerText=atleta.posicao;
 
-  let imc=(a.peso/(a.altura*a.altura)).toFixed(1);
-  let iac=(a.quadril/(a.altura*Math.sqrt(a.altura))-18).toFixed(1);
+  let imc=(atleta.peso/(atleta.altura**2)).toFixed(1);
+  let iac=(atleta.quadril/(atleta.altura*Math.sqrt(atleta.altura))-18).toFixed(1);
 
   pIMC.innerText=imc;
   pIAC.innerText=iac;
 
+  alertaSaude.innerHTML =
+    (imc<18.5||imc>25||iac>35)
+    ? `<span class="alerta">⚠ Atenção aos indicadores corporais</span>`
+    : `<span class="ok">✓ Indicadores dentro do esperado</span>`;
+
   login.classList.add("oculto");
   app.classList.remove("oculto");
-
-  desenharHistorico();
 }
 
+/* ANÁLISE */
 function analisar(){
   let fundamentos=["Saque","Passe","Ataque","Defesa"];
   let sessao={};
@@ -250,9 +284,27 @@ function analisar(){
 
   atleta.sessoes.push(sessao);
   localStorage.setItem(atleta.nome,JSON.stringify(atleta));
+
+  desenharDashboard(sessao);
   desenharHistorico();
 }
 
+/* DASHBOARD */
+function desenharDashboard(s){
+  let ctx=grafico.getContext("2d");
+  ctx.clearRect(0,0,360,180);
+  let i=0;
+  for(let f in s){
+    let h=s[f]*1.4;
+    ctx.fillStyle="#3f51b5";
+    ctx.fillRect(30+i*80,160-h,46,h);
+    ctx.fillText(f,30+i*80,175);
+    ctx.fillText(s[f]+"%",34+i*80,145-h);
+    i++;
+  }
+}
+
+/* HISTÓRICO */
 function desenharHistorico(){
   let ctx=historico.getContext("2d");
   ctx.clearRect(0,0,360,180);
@@ -260,9 +312,18 @@ function desenharHistorico(){
   atleta.sessoes.forEach((s,i)=>{
     let media=(s.Saque+s.Passe+s.Ataque+s.Defesa)/4;
     let h=media*1.4;
-    ctx.fillStyle="#3f51b5";
+    ctx.fillStyle="#9fa8da";
     ctx.fillRect(20+i*40,160-h,30,h);
   });
+}
+
+function toggleHistorico(){
+  historico.classList.toggle("oculto");
+}
+
+/* PDF */
+function gerarPDF(){
+  window.print();
 }
 
 function sair(){
