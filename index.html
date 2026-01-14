@@ -1,191 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vôlei em Evolução</title>
+
+<style>
+:root{
+  --primary:#3f51b5;
+  --bg:#f2f4f8;
+  --card:#fff;
+  --soft:#f7f9ff;
+  --radius:14px;
+}
+
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+  background:var(--bg);
+}
+
+.app{
+  max-width:420px;
+  margin:auto;
+  min-height:100vh;
+  padding:16px;
+}
+
+h1,h2{color:var(--primary);}
+
+input,select{
+  width:100%;
+  padding:10px;
+  height:42px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  margin-top:8px;
+}
+
+button{
+  width:100%;
+  padding:14px;
+  margin-top:14px;
+  background:var(--primary);
+  color:#fff;
+  border:none;
+  border-radius:12px;
+  font-size:15px;
+}
+
+.perfil{
+  background:linear-gradient(135deg,#3f51b5,#5c6bc0);
+  color:#fff;
+  padding:12px;
+  border-radius:var(--radius);
+  font-size:13px;
+  line-height:1.4;
+}
+
+.card{
+  background:var(--card);
+  padding:12px;
+  border-radius:var(--radius);
+  margin-top:12px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+
+.progress{
+  height:8px;
+  background:#e0e4f5;
+  border-radius:8px;
+  overflow:hidden;
+  margin-top:6px;
+}
+.progress-bar{
+  height:100%;
+  width:0%;
+  transition:width .8s ease;
+}
+.pb-red{background:#d32f2f;}
+.pb-yellow{background:#f9a825;}
+.pb-green{background:#388e3c;}
+
+canvas{
+  margin-top:12px;
+  background:#fff;
+  border-radius:var(--radius);
+}
+
+.oculto{display:none;}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<!-- LOGIN -->
+<div id="login">
+  <h1>🏐 Vôlei em Evolução</h1>
+
+  <input id="nome" placeholder="Nome">
+  <input id="idade" type="number" placeholder="Idade">
+  <input id="altura" type="number" step="0.01" placeholder="Altura (m)">
+  <input id="peso" type="number" step="0.1" placeholder="Peso (kg)">
+  <input id="quadril" type="number" step="0.1" placeholder="Circunferência do quadril (cm)">
+
+  <select id="genero">
+    <option value="">Gênero</option>
+    <option>Feminino</option>
+    <option>Masculino</option>
+  </select>
+
+  <select id="posicao">
+    <option value="">Posição</option>
+    <option>Levantador(a)</option>
+    <option>Ponteiro(a)</option>
+    <option>Central</option>
+    <option>Oposto(a)</option>
+    <option>Líbero</option>
+  </select>
+
+  <button onclick="entrar()">Entrar</button>
+</div>
+
+<!-- APP -->
+<div id="app" class="oculto">
+
+<div class="perfil">
+<strong>Atleta:</strong> <span id="pNome"></span><br>
+<strong>Idade:</strong> <span id="pIdade"></span> ·
+<strong>Gênero:</strong> <span id="pGenero"></span><br>
+<strong>Posição:</strong> <span id="pPosicao"></span><br>
+<strong>IMC:</strong> <span id="pIMC"></span> ·
+<strong>IAC:</strong> <span id="pIAC"></span>
+</div>
+
+<h2>Fundamentos</h2>
+
+<div class="card">
+  <strong>Saque</strong>
+  <div class="grid">
+    <input id="SaqueA" type="number" placeholder="Acertos">
+    <input id="SaqueE" type="number" placeholder="Erros">
+  </div>
+  <div class="progress"><div id="barSaque" class="progress-bar"></div></div>
+</div>
+
+<div class="card">
+  <strong>Passe</strong>
+  <div class="grid">
+    <input id="PasseA" type="number" placeholder="Acertos">
+    <input id="PasseE" type="number" placeholder="Erros">
+  </div>
+  <div class="progress"><div id="barPasse" class="progress-bar"></div></div>
+</div>
+
+<div class="card">
+  <strong>Ataque</strong>
+  <div class="grid">
+    <input id="AtaqueA" type="number" placeholder="Acertos">
+    <input id="AtaqueE" type="number" placeholder="Erros">
+  </div>
+  <div class="progress"><div id="barAtaque" class="progress-bar"></div></div>
+</div>
+
+<div class="card">
+  <strong>Defesa</strong>
+  <div class="grid">
+    <input id="DefesaA" type="number" placeholder="Acertos">
+    <input id="DefesaE" type="number" placeholder="Erros">
+  </div>
+  <div class="progress"><div id="barDefesa" class="progress-bar"></div></div>
+</div>
+
+<button onclick="analisar()">Analisar Sessão</button>
+
+<h2>Histórico Visual</h2>
+<canvas id="historico" width="360" height="180"></canvas>
+
+<button onclick="sair()">Trocar Atleta</button>
+
+</div>
+</div>
+
 <script>
-/* ======================
-   CONFIGURAÇÕES GERAIS
-====================== */
-const fundamentosLista=["Saque","Passe","Ataque","Defesa"];
-let atletaAtual=null;
+let atleta=null;
 
-/* METAS POR POSIÇÃO */
-const metasPorPosicao={
-  "Levantador(a)":{Saque:60,Passe:80,Ataque:55,Defesa:70},
-  "Ponteiro(a)":{Saque:70,Passe:70,Ataque:75,Defesa:65},
-  "Central":{Saque:60,Passe:65,Ataque:80,Defesa:60},
-  "Oposto(a)":{Saque:65,Passe:60,Ataque:80,Defesa:60},
-  "Líbero":{Saque:0,Passe:85,Ataque:0,Defesa:85}
-};
-
-/* TREINOS POR POSIÇÃO */
-const treinosPorPosicao={
-  "Levantador(a)":{
-    Passe:["Passe em deslocamento","Tomada de decisão","Coordenação mãos e pernas"],
-    Saque:["Saque controle","Rotina técnica","Consistência"]
-  },
-  "Central":{
-    Ataque:["Tempo de ataque","Impulsão controlada","Coordenação salto-braço"],
-    Passe:["Passe simples","Base motora","Controle corporal"]
-  },
-  "Ponteiro(a)":{
-    Ataque:["Ataque em situação real","Transição defesa-ataque","Velocidade + controle"]
-  },
-  "Oposto(a)":{
-    Ataque:["Finalização forte","Explosão","Eficiência ofensiva"]
-  },
-  "Líbero":{
-    Defesa:["Defesa baixa","Reação rápida","Leitura de jogo"],
-    Passe:["Passe de precisão","Estabilidade","Consistência"]
-  }
-};
-
-/* ======================
-   LOGIN / PERFIL
-====================== */
-function entrarApp(){
-  if(!nome.value||!idade.value||!genero.value||!posicao.value){
-    alert("Preencha todo o perfil");
-    return;
-  }
-
-  atletaAtual = nome.value;
-
-  let atleta = {
-    perfil:{
-      nome:nome.value,
-      idade:idade.value,
-      genero:genero.value,
-      posicao:posicao.value
-    },
+function entrar(){
+  atleta={
+    nome:nome.value,
+    idade:+idade.value,
+    genero:genero.value,
+    posicao:posicao.value,
+    altura:+altura.value,
+    peso:+peso.value,
+    quadril:+quadril.value,
     sessoes:[]
   };
 
-  localStorage.setItem(atletaAtual, JSON.stringify(atleta));
+  if(!atleta.nome||!atleta.altura||!atleta.peso||!atleta.quadril){
+    alert("Preencha todos os dados");
+    return;
+  }
 
-  carregarPerfil();
-  montarFundamentos();
+  localStorage.setItem(atleta.nome,JSON.stringify(atleta));
+  carregar();
+}
 
-  telaLogin.classList.add("oculto");
+function carregar(){
+  let a=JSON.parse(localStorage.getItem(atleta.nome));
+  atleta=a;
+
+  pNome.innerText=a.nome;
+  pIdade.innerText=a.idade;
+  pGenero.innerText=a.genero;
+  pPosicao.innerText=a.posicao;
+
+  let imc=(a.peso/(a.altura*a.altura)).toFixed(1);
+  let iac=(a.quadril/(a.altura*Math.sqrt(a.altura))-18).toFixed(1);
+
+  pIMC.innerText=imc;
+  pIAC.innerText=iac;
+
+  login.classList.add("oculto");
   app.classList.remove("oculto");
+
+  desenharHistorico();
 }
 
-function carregarPerfil(){
-  let atleta = JSON.parse(localStorage.getItem(atletaAtual));
-  pNome.innerText=atleta.perfil.nome;
-  pIdade.innerText=atleta.perfil.idade;
-  pGenero.innerText=atleta.perfil.genero;
-  pPosicao.innerText=atleta.perfil.posicao;
-}
-
-/* ======================
-   FUNDAMENTOS
-====================== */
-function montarFundamentos(){
-  fundamentos.innerHTML="";
-  let atleta = JSON.parse(localStorage.getItem(atletaAtual));
-  let pos = atleta.perfil.posicao;
-
-  fundamentosLista.forEach(f=>{
-    let meta = metasPorPosicao[pos][f];
-    fundamentos.innerHTML+=`
-    <div class="card">
-      <h3>${f}</h3>
-      <div class="grid-inputs">
-        <input id="${f}A" type="number" placeholder="Acertos">
-        <input id="${f}E" type="number" placeholder="Erros">
-      </div>
-      <div class="progress">
-        <div id="bar${f}" class="progress-bar"></div>
-      </div>
-      <div class="meta">
-        <span>Meta ${meta}%</span>
-        <span id="txt${f}">0%</span>
-      </div>
-    </div>`;
-  });
-}
-
-/* ======================
-   ANÁLISE + SALVAR
-====================== */
 function analisar(){
-  let atleta = JSON.parse(localStorage.getItem(atletaAtual));
-  let pos = atleta.perfil.posicao;
+  let fundamentos=["Saque","Passe","Ataque","Defesa"];
+  let sessao={};
 
-  let sessao = {
-    data: new Date().toLocaleString(),
-    fundamentos:[]
-  };
-
-  fundamentosLista.forEach(f=>{
+  fundamentos.forEach(f=>{
     let A=+document.getElementById(f+"A").value||0;
     let E=+document.getElementById(f+"E").value||0;
     let pct=A+E?Math.round(A/(A+E)*100):0;
+    sessao[f]=pct;
 
-    sessao.fundamentos.push({nome:f,pct});
-    atualizarBarra(f,pct,metasPorPosicao[pos][f]);
+    let bar=document.getElementById("bar"+f);
+    bar.style.width=pct+"%";
+    bar.className="progress-bar "+(pct<60?"pb-red":pct<75?"pb-yellow":"pb-green");
   });
 
   atleta.sessoes.push(sessao);
-  localStorage.setItem(atletaAtual, JSON.stringify(atleta));
-
-  gerarTreino(pos, sessao);
-  renderizarGrafico(sessao.fundamentos);
+  localStorage.setItem(atleta.nome,JSON.stringify(atleta));
+  desenharHistorico();
 }
 
-/* ======================
-   BARRAS
-====================== */
-function atualizarBarra(f,pct,meta){
-  let b=document.getElementById("bar"+f);
-  let t=document.getElementById("txt"+f);
-  t.innerText=pct+"%";
-  b.style.width=pct+"%";
-  b.className="progress-bar "+(pct<meta?"pb-red":pct<meta+10?"pb-yellow":"pb-green");
-}
+function desenharHistorico(){
+  let ctx=historico.getContext("2d");
+  ctx.clearRect(0,0,360,180);
 
-/* ======================
-   TREINO AUTOMÁTICO
-====================== */
-function gerarTreino(posicao,sessao){
-  let pior = sessao.fundamentos.reduce((a,b)=>a.pct<b.pct?a:b);
-  let lista = treinosPorPosicao[posicao]?.[pior.nome];
-
-  let html=`<div class="resultado">
-  📋 <strong>Treino sugerido (${pior.nome})</strong><br>`;
-
-  if(lista){
-    lista.forEach(i=>html+=`• ${i}<br>`);
-  }else{
-    html+=`• Treino técnico geral<br>• Base motora<br>• Controle`;
-  }
-
-  html+="</div>";
-  saida.innerHTML=html;
-}
-
-/* ======================
-   DASHBOARD (CORRIGIDO)
-====================== */
-function renderizarGrafico(dados){
-  let canvas = document.getElementById("grafico");
-  let ctx = canvas.getContext("2d");
-
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-
-  dados.forEach((f,i)=>{
-    let altura = f.pct * 1.4;
+  atleta.sessoes.forEach((s,i)=>{
+    let media=(s.Saque+s.Passe+s.Ataque+s.Defesa)/4;
+    let h=media*1.4;
     ctx.fillStyle="#3f51b5";
-    ctx.fillRect(30+i*80,160-altura,46,altura);
-    ctx.fillText(f.nome,30+i*80,175);
-    ctx.fillText(f.pct+"%",35+i*80,145-altura);
+    ctx.fillRect(20+i*40,160-h,30,h);
   });
 }
 
-/* ======================
-   OUTROS
-====================== */
-function gerarPDF(){ window.print(); }
-
 function sair(){
   app.classList.add("oculto");
-  telaLogin.classList.remove("oculto");
+  login.classList.remove("oculto");
 }
 </script>
+</body>
+</html>
